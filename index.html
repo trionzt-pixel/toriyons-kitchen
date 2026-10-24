@@ -1,0 +1,812 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="description" content="しらすのキッチンカー「とりおんずキッチン」で、お客さんの注文どおりにしらすライスバーガー・塩焼きそば・たまごスープを作って提供する調理ゲーム。">
+<meta property="og:title" content="とりおんずキッチン">
+<meta property="og:description" content="しらすのキッチンカー調理ゲーム">
+<meta property="og:type" content="website">
+<style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0}img{max-width:100%}</style>
+<script>window.KITCHEN_RANKING_URL="https://script.google.com/macros/s/AKfycbz-rfuckSP1dzlJVm035xn_bzy165-WonwhJOXbz6_31Qvr0pzQ4W2b4pv9_k6j97X2/exec";</script>
+<title>とりおんずキッチン</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Dela+Gothic+One&family=Zen+Maru+Gothic:wght@500;700;900&display=swap" rel="stylesheet">
+<style>
+/* Layout: 窓口（お客さん）→ 提供カウンター → 調理場3ステーション（鉄板／バーガー台／焼きそば・スープ）。車体ティールと海の単一テーマ、太い墨線のステッカー調 */
+:root{
+  --car:#3fb8a8; --car-dk:#1f7d70; --sky:#c4e9f6; --sea:#2b88b0; --sea-lt:#5fb3d3;
+  --awn1:#fbf8f1; --awn2:#e9564c;
+  --steel:#e4eaec; --steel-dk:#9fb0b7; --grill:#2b3135; --grill-lt:#3d464b;
+  --wood:#e2b578; --wood-dk:#b07a3c;
+  --ink:#1f2d33; --paper:#ffffff; --muted:#56666d;
+  --ok:#2e9e5b; --warn:#e8a321; --bad:#d6453b; --hi:#ffd84a;
+  --display:"Dela Gothic One","Hiragino Sans","Yu Gothic",sans-serif;
+  --body:"Zen Maru Gothic","Hiragino Maru Gothic ProN","Yu Gothic UI","Yu Gothic",sans-serif;
+  color-scheme:light;
+}
+html,body{background:var(--car);color:var(--ink)}
+body{font-family:var(--body);font-weight:500;
+  background:var(--car) radial-gradient(rgba(255,255,255,.12) 2px,transparent 2.5px) 0 0/22px 22px}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+#app{max-width:1120px;margin:0 auto;display:flex;flex-direction:column;gap:12px;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:12px 28px}
+button{font-family:inherit;color:inherit}
+
+/* ---- header ---- */
+.topbar{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px 16px;
+  background:var(--paper);border:3px solid var(--ink);border-radius:16px;padding:8px 14px;box-shadow:0 4px 0 var(--ink)}
+.logo{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
+.logo b{font-family:var(--display);font-weight:400;font-size:22px;letter-spacing:.02em}
+.logo small{font-size:12px;color:var(--muted)}
+.stats{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.stat{display:flex;flex-direction:column;align-items:flex-start;line-height:1.1;padding:4px 10px;border-radius:10px;background:var(--steel)}
+.stat span{font-size:10px;color:var(--muted);letter-spacing:.08em}
+.stat strong{font-family:var(--display);font-weight:400;font-size:18px;font-variant-numeric:tabular-nums}
+.stat.time.low strong{color:var(--bad)}
+.hearts{color:var(--bad);letter-spacing:1px}
+.hearts .off{color:#c8d0d3}
+.tools{display:flex;gap:6px}
+
+/* ---- buttons ---- */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;font-weight:700;font-size:14px;
+  background:var(--paper);border:2px solid var(--ink);border-radius:10px;padding:7px 10px;cursor:pointer;
+  box-shadow:0 3px 0 var(--ink);transition:transform .05s,box-shadow .05s;line-height:1.2;text-align:center}
+.btn:active:not(:disabled){transform:translateY(2px);box-shadow:0 1px 0 var(--ink)}
+.btn:disabled{opacity:.4;cursor:not-allowed}
+.btn:focus-visible,.cust:focus-visible,.slot-hit:focus-visible,.citem:focus-visible{outline:3px solid var(--hi);outline-offset:2px}
+.btn.small{font-size:12px;padding:5px 8px}
+.btn.go{background:var(--hi)}
+.btn.warn{background:#fde3df}
+.chip{width:14px;height:14px;border-radius:50%;border:1.5px solid var(--ink);flex:none}
+.btn .cnt{font-family:var(--display);font-weight:400;font-size:12px;background:var(--ink);color:var(--paper);border-radius:8px;padding:0 6px}
+
+/* ---- service window ---- */
+.window{position:relative;border:3px solid var(--ink);border-radius:16px;overflow:hidden;box-shadow:0 4px 0 var(--ink);
+  background:linear-gradient(var(--sky) 0 58%,var(--sea-lt) 58% 63%,var(--sea) 63%)}
+.awning{height:26px;border-bottom:3px solid var(--ink);
+  background:repeating-linear-gradient(90deg,var(--awn1) 0 30px,var(--awn2) 30px 60px)}
+.window::before{content:"";position:absolute;left:8%;top:44%;width:120px;height:26px;border-radius:60px 60px 0 0;background:#8fc7a2;opacity:.8}
+.window::after{content:"";position:absolute;left:0;right:0;top:72%;height:6px;
+  background:radial-gradient(circle at 10px -2px,transparent 8px,rgba(255,255,255,.35) 9px,transparent 10px) 0 0/40px 6px repeat-x}
+#customers{position:relative;z-index:1;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;padding:10px 12px 0;min-height:216px;align-items:end}
+.empty-q{grid-column:1/-1;align-self:center;text-align:center;color:var(--ink);font-weight:700;opacity:.6}
+.cust{all:unset;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:4px;position:relative;min-width:0}
+.cust.enter{animation:hop .45s ease-out}
+@keyframes hop{0%{transform:translateY(30px);opacity:0}70%{transform:translateY(-4px);opacity:1}100%{transform:none}}
+.ticket{background:var(--paper);border:2px solid var(--ink);border-radius:6px;padding:4px 8px 5px;font-size:12px;width:100%;max-width:190px;
+  box-shadow:0 2px 0 var(--ink);position:relative}
+.ticket .no{font-size:10px;color:var(--muted);display:flex;justify-content:space-between}
+.ticket ul{list-style:none;margin:2px 0 0;padding:0;display:flex;flex-direction:column;gap:2px}
+.ticket li{display:flex;align-items:center;gap:4px;font-weight:700;line-height:1.2}
+.ticket li svg{width:22px;height:22px;flex:none}
+.ticket li.done{color:var(--ok);text-decoration:line-through}
+.cust:hover .ticket{background:#fffbe2}
+.cust-svg{width:76px;height:88px;display:block;margin-bottom:-2px}
+.pbar{width:76px;height:8px;border:2px solid var(--ink);border-radius:6px;background:var(--paper);overflow:hidden;margin-bottom:8px}
+.pbar i{display:block;height:100%;width:100%;background:var(--ok)}
+.say{position:absolute;top:-6px;left:50%;transform:translate(-50%,-100%);background:var(--ink);color:var(--paper);font-size:12px;font-weight:700;
+  padding:3px 8px;border-radius:8px;white-space:nowrap;z-index:3}
+.cust .say{top:auto;bottom:96px;transform:translateX(-50%)}
+
+/* ---- counter ---- */
+.counter{display:flex;align-items:center;gap:10px;flex-wrap:wrap;background:var(--wood);border:3px solid var(--ink);border-radius:14px;
+  padding:8px 12px;box-shadow:0 4px 0 var(--wood-dk),0 4px 0 2px var(--ink)}
+.counter h3{margin:0;font-size:13px;font-weight:900;writing-mode:horizontal-tb;min-width:max-content}
+.counter h3 small{display:block;font-weight:500;font-size:11px}
+#counter{display:flex;gap:8px;flex-wrap:wrap;flex:1;min-height:58px;align-items:center}
+.citem{cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;width:66px;height:58px;background:var(--paper);
+  border:2px solid var(--ink);border-radius:10px;font-size:10px;font-weight:700;box-shadow:0 3px 0 var(--ink);padding:2px}
+.citem svg{width:32px;height:32px}
+.citem.sel{background:var(--hi);transform:translateY(-4px);box-shadow:0 6px 0 var(--ink)}
+.counter .hint{font-size:12px;color:var(--ink);opacity:.75}
+
+/* ---- kitchen ---- */
+.kitchen{display:grid;grid-template-columns:1.15fr 1fr 1fr;gap:12px;align-items:start}
+@media (max-width:860px){.kitchen{grid-template-columns:1fr}}
+.station{background:var(--steel);border:3px solid var(--ink);border-radius:16px;padding:12px;display:flex;flex-direction:column;gap:10px;min-width:0;box-shadow:0 4px 0 var(--ink)}
+.station h2{margin:0;font-family:var(--display);font-weight:400;font-size:17px;display:flex;justify-content:space-between;align-items:baseline;gap:8px}
+.station h2 small{font-family:var(--body);font-size:11px;color:var(--muted);font-weight:700}
+.row{display:flex;flex-wrap:wrap;gap:6px}
+.recipe-card{background:var(--paper);border:2px dashed var(--steel-dk);border-radius:10px;padding:6px 10px;font-size:12px;line-height:1.5}
+.recipe-card ol{margin:0;padding-left:18px}
+.recipe-card b{font-size:11px;color:var(--muted)}
+.nexthint{font-size:13px;font-weight:900;text-align:center;border-radius:8px;padding:3px 6px;background:#dff3e6;color:var(--ok)}
+.nexthint.bad{background:#fde3df;color:var(--bad)}
+
+/* grill */
+#grill{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;background:var(--grill);border:3px solid var(--ink);border-radius:12px;padding:8px}
+.slot{background:var(--grill-lt);border-radius:8px;padding:6px;display:flex;flex-direction:column;gap:5px;min-height:118px;
+  background-image:repeating-linear-gradient(0deg,transparent 0 9px,rgba(0,0,0,.18) 9px 11px)}
+.slot.empty{align-items:center;justify-content:center;color:#8d9aa0;font-size:12px;font-weight:700}
+.slot-hit{all:unset;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:4px;padding-top:4px;border-radius:6px}
+.slot-label{font-size:11px;font-weight:700;color:#f3f6f7;text-align:center;line-height:1.25}
+.slot.done .slot-label{color:var(--hi)}
+.slot.burnt .slot-label{color:#ff9a8f}
+.bar{height:6px;border-radius:4px;background:rgba(255,255,255,.15);overflow:hidden}
+.bar i{display:block;height:100%;width:0;background:var(--warn)}
+.soba-acts{display:grid;grid-template-columns:1fr 1fr;gap:4px}
+.mini{font-family:inherit;font-weight:700;font-size:11px;padding:4px 2px;border-radius:7px;border:2px solid var(--ink);background:var(--paper);cursor:pointer;box-shadow:0 2px 0 #000}
+.mini:disabled{background:#9fd8b4;opacity:.85;cursor:default;box-shadow:none}
+.mini.plate{grid-column:1/-1;background:var(--hi)}
+
+.food{position:relative;flex:none}
+.food.patty{width:62px;height:40px;border-radius:50%;border:2px solid var(--ink);
+  background:radial-gradient(#fff 1px,transparent 1.6px) 0 0/6px 6px,#efe8d4}
+.food.patty::after{content:"";position:absolute;inset:0;border-radius:50%;background:radial-gradient(circle,#c98a45,#93561d);opacity:calc(var(--p,0)*.62)}
+.food.egg{width:62px;height:42px;border-radius:46% 54% 50% 48%;border:2px solid var(--ink);background:rgba(255,255,255,calc(.3 + var(--p,0)*.7))}
+.food.egg::after{content:"";position:absolute;width:20px;height:20px;left:50%;top:50%;transform:translate(-50%,-50%);border-radius:50%;background:#f5b324;border:2px solid var(--ink)}
+.food.soba{width:74px;height:44px;border-radius:44%;border:2px solid var(--ink);overflow:hidden;
+  background:repeating-linear-gradient(32deg,#e1b06a 0 3px,#bf8641 3px 5px),#d39d55;filter:brightness(calc(1.12 - var(--p,0)*.15))}
+.food .t-shirasu,.food .t-ooba{position:absolute;inset:0}
+.food .t-shirasu{background:radial-gradient(ellipse 4px 1.6px,#fff 85%,transparent) 2px 4px/11px 9px}
+.food .t-ooba{background:radial-gradient(ellipse 5px 3px,#3f9a3a 85%,transparent) 6px 1px/17px 13px}
+.food.burnt{background:#3b2a20 !important;filter:none}
+.food.burnt::after{background:#1c120c;opacity:.75}
+
+.tray{background:#cfd8dc;border:2px solid var(--ink);border-radius:10px;padding:6px 10px;font-size:12px;font-weight:700;display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+.tray .ti{display:flex;align-items:center;gap:5px}
+.tray .mini-patty{width:22px;height:14px;border-radius:50%;border:1.5px solid var(--ink);background:#d5a467}
+.tray .mini-egg{width:22px;height:14px;border-radius:50%;border:1.5px solid var(--ink);background:radial-gradient(circle,#f5b324 0 4px,#fff 4.5px)}
+.tray .n{font-family:var(--display);font-weight:400;font-size:14px;font-variant-numeric:tabular-nums}
+
+/* burger board */
+.board{background:var(--wood);border:3px solid var(--ink);border-radius:12px;min-height:182px;padding:10px;display:flex;flex-direction:column-reverse;align-items:center;justify-content:flex-start;gap:1px;position:relative}
+.board .ph{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:#7a5428;text-align:center;padding:10px}
+.layer{border:2px solid var(--ink);flex:none}
+.l-rice{width:138px;height:22px;border-radius:12px;background:radial-gradient(#fff 1px,transparent 1.6px) 0 0/6px 6px,linear-gradient(#f3ead2,#d7b07a)}
+.l-lettuce{width:152px;height:11px;border-radius:9px;background:#6cbf4f}
+.l-egg{width:146px;height:13px;border-radius:8px;background:radial-gradient(ellipse 24px 9px,#f5b324 95%,transparent) center/100% 100% no-repeat,#fffdf5}
+.l-tomato{width:136px;height:10px;border-radius:6px;background:#e5483d}
+.l-shirasu{width:140px;height:11px;border-radius:6px;background:radial-gradient(ellipse 4px 1.6px,#fff 85%,transparent) 0 0/9px 6px,#e6dcc4}
+.l-jelly{width:132px;height:8px;border-radius:6px;background:rgba(196,120,40,.55)}
+.ing-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}
+.ing-grid .btn{padding:7px 4px;font-size:13px}
+
+/* side station */
+.sub{background:var(--paper);border:2px solid var(--ink);border-radius:12px;padding:8px;display:flex;flex-direction:column;gap:8px}
+.sub h4{margin:0;font-size:13px;font-weight:900;display:flex;justify-content:space-between}
+.sub h4 small{font-weight:700;color:var(--muted);font-size:11px}
+.vis{display:flex;justify-content:center;align-items:center;height:92px;background:var(--steel);border-radius:8px}
+.vis svg{height:84px;width:auto}
+
+/* overlays */
+.overlay{position:fixed;inset:0;z-index:20;background:rgba(20,40,46,.55);display:flex;align-items:center;justify-content:center;
+  padding:max(16px,env(safe-area-inset-top,0px)) max(16px,env(safe-area-inset-right,0px)) max(16px,env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px));overflow:auto}
+.panel{background:var(--paper);border:3px solid var(--ink);border-radius:18px;box-shadow:0 6px 0 var(--ink);padding:20px 22px;max-width:620px;width:100%;max-height:100%;overflow:auto}
+.panel h1{font-family:var(--display);font-weight:400;font-size:clamp(28px,6vw,40px);margin:0;line-height:1.1;text-wrap:balance}
+.panel h2{font-family:var(--display);font-weight:400;font-size:22px;margin:0 0 8px}
+.panel p,.panel li{line-height:1.7;font-size:14px}
+.panel ul{padding-left:20px;margin:8px 0}
+.menu3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin:12px 0}
+.menu3 div{border:2px solid var(--ink);border-radius:12px;padding:8px 6px;text-align:center;font-size:12px;font-weight:700;background:var(--steel)}
+.menu3 svg{width:46px;height:46px;display:block;margin:0 auto 2px}
+.menu3 em{font-style:normal;display:block;color:var(--muted);font-variant-numeric:tabular-nums}
+.choices{display:flex;gap:10px;flex-wrap:wrap;margin-top:14px}
+.choices .btn{flex:1;min-width:150px;flex-direction:column;padding:10px}
+.choices .btn small{font-weight:500;font-size:11px}
+.best{font-size:12px;color:var(--muted);margin-top:10px}
+.rcp{display:grid;gap:10px}
+.rcp section{border:2px solid var(--ink);border-radius:12px;padding:8px 12px;background:var(--steel)}
+.rcp h3{margin:0;font-size:15px;display:flex;align-items:center;gap:6px}
+.rcp h3 svg{width:28px;height:28px}
+.rcp ol{margin:4px 0 0;padding-left:20px;font-size:13px;line-height:1.6}
+.stack-order{display:flex;flex-wrap:wrap;gap:4px;margin-top:4px}
+.stack-order span{font-size:12px;background:var(--paper);border:1.5px solid var(--ink);border-radius:6px;padding:0 6px}
+.result-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin:12px 0}
+.result-grid div{background:var(--steel);border-radius:10px;padding:8px 10px}
+.result-grid span{display:block;font-size:11px;color:var(--muted)}
+.result-grid strong{font-family:var(--display);font-weight:400;font-size:22px;font-variant-numeric:tabular-nums}
+.rank{font-family:var(--display);font-size:64px;line-height:1;color:var(--awn2);-webkit-text-stroke:2px var(--ink)}
+
+.rankbox{background:var(--steel);border:2px solid var(--ink);border-radius:12px;padding:10px 12px;margin-top:12px;display:flex;flex-direction:column;gap:8px}
+.rankbox b{font-size:14px}
+.rankbox .row{align-items:center}
+.rankbox input{font:inherit;font-weight:700;font-size:15px;border:2px solid var(--ink);border-radius:8px;padding:6px 8px;flex:1;min-width:0;background:var(--paper)}
+.rankbox input:focus-visible{outline:3px solid var(--hi);outline-offset:1px}
+.note{font-size:12px;color:var(--muted);margin:0}
+.tabs{display:flex;gap:6px;margin-bottom:8px}
+.tabs .btn[aria-pressed="true"]{background:var(--hi)}
+.rank-list{overflow-x:auto}
+.rank-list table{width:100%;border-collapse:collapse;font-size:14px;font-variant-numeric:tabular-nums}
+.rank-list th{font-size:11px;color:var(--muted);text-align:left;padding:4px 6px;border-bottom:2px solid var(--ink)}
+.rank-list td{padding:6px;border-bottom:1px solid var(--steel-dk)}
+.rank-list td.num{text-align:right;font-weight:700}
+.rank-list tr.mine td{background:#fff6c4}
+.rank-list .pos{font-family:var(--display);font-size:16px;width:2.5em}
+.rank-list tr:nth-child(1) .pos{color:#c9961a}.rank-list tr:nth-child(2) .pos{color:#8a98a0}.rank-list tr:nth-child(3) .pos{color:#b06a35}
+#toasts{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(16px + env(safe-area-inset-bottom,0px));z-index:30;display:flex;flex-direction:column;gap:6px;align-items:center;pointer-events:none;width:min(92vw,420px)}
+.toast{background:var(--ink);color:var(--paper);font-weight:700;font-size:14px;padding:8px 14px;border-radius:12px;box-shadow:0 3px 0 rgba(0,0,0,.25);animation:tin .2s ease-out;text-align:center}
+.toast.good{background:var(--ok)} .toast.bad{background:var(--bad)}
+.toast.out{opacity:0;transition:opacity .35s}
+@keyframes tin{from{transform:translateY(10px);opacity:0}}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+
+<div id="app">
+  <header class="topbar">
+    <div class="logo"><b>とりおんずキッチン</b><small>しらすのキッチンカー</small></div>
+    <div class="stats">
+      <div class="stat time" id="st-time"><span>のこり時間</span><strong id="v-time">3:00</strong></div>
+      <div class="stat"><span>売上</span><strong id="v-money">0円</strong></div>
+      <div class="stat"><span>評判</span><strong class="hearts" id="v-rep"></strong></div>
+    </div>
+    <div class="tools">
+      <button class="btn small" data-a="recipe">レシピ</button>
+      <button class="btn small" data-a="sound" id="b-sound">音 ON</button>
+      <button class="btn small" data-a="pause">一時停止</button>
+    </div>
+  </header>
+
+  <section class="window" aria-label="お客さん">
+    <div class="awning"></div>
+    <div id="customers"></div>
+  </section>
+
+  <section class="counter" aria-label="提供カウンター">
+    <h3>提供カウンター<small>品をえらんで→お客さんをタップ</small></h3>
+    <div id="counter"></div>
+    <button class="btn small warn" data-a="trash">選んだ品を捨てる</button>
+  </section>
+
+  <section class="kitchen">
+    <div class="station">
+      <h2>鉄板 <small>焼けたらタップ</small></h2>
+      <div id="grill"></div>
+      <div class="row">
+        <button class="btn" data-a="place" data-v="patty"><span class="chip" style="background:#efe8d4"></span>ライスパテ</button>
+        <button class="btn" data-a="place" data-v="egg"><span class="chip" style="background:radial-gradient(circle,#f5b324 0 4px,#fff 4.5px)"></span>目玉焼き</button>
+        <button class="btn" data-a="place" data-v="soba"><span class="chip" style="background:#d39d55"></span>焼きそば</button>
+      </div>
+      <div class="tray" id="tray"></div>
+      <div class="recipe-card easy-only"><b>鉄板のコツ</b><br>ライスパテはバーガー1個に2枚。焼けた焼きそばは「しらす＋大葉」→「塩だれ・だし塩」→「器に盛る」。</div>
+    </div>
+
+    <div class="station">
+      <h2>ライスバーガー台 <small>下から順に重ねる</small></h2>
+      <div id="burger-hint"></div>
+      <div class="board" id="board"></div>
+      <div class="ing-grid" id="ing"></div>
+      <div class="row">
+        <button class="btn go" data-a="wrap" style="flex:1">紙でくるむ → カウンター</button>
+        <button class="btn small warn" data-a="burger-clear">やり直す</button>
+      </div>
+      <div class="recipe-card easy-only"><b>重ねる順（下から）</b><br>ライス → レタス → たまご → トマト → しらす → ジュレ → ライス</div>
+    </div>
+
+    <div class="station">
+      <h2>盛り付け・スープ</h2>
+      <div class="sub" id="plate-area"></div>
+      <div class="sub" id="soup-area"></div>
+    </div>
+  </section>
+</div>
+
+<div class="overlay" id="ov-start">
+  <div class="panel">
+    <h1>とりおんずキッチン</h1>
+    <p>しらすのキッチンカー「とりおんずキッチン」の調理場に立って、お客さんの注文どおりに作って出そう。営業時間は3分です。</p>
+    <div class="menu3" id="menu3"></div>
+    <ul>
+      <li>窓口の<b>伝票</b>で注文を確認。</li>
+      <li>鉄板で焼く → 台で仕上げる → <b>提供カウンター</b>へ。</li>
+      <li>カウンターの品をタップしてから、<b>お客さんをタップ</b>して提供（品を選ばずにお客さんをタップすると、合う品を自動で出します）。</li>
+      <li>手順をまちがえた品を出すと評判（♥）が下がります。焦げと待たせすぎにも注意。♥が0で閉店。</li>
+    </ul>
+    <div class="choices">
+      <button class="btn go" data-a="start" data-v="easy">やさしい<small>レシピとヒント表示・お客さんが気長</small></button>
+      <button class="btn" data-a="start" data-v="normal">ふつう<small>レシピは「レシピ」ボタンで確認</small></button>
+    </div>
+    <div class="choices rank-only" hidden><button class="btn" data-a="rank-open">みんなのランキング</button></div>
+    <div class="best" id="best"></div>
+  </div>
+</div>
+
+<div class="overlay" id="ov-recipe" hidden>
+  <div class="panel">
+    <h2>レシピ</h2>
+    <div class="rcp" id="rcp"></div>
+    <div class="choices"><button class="btn go" data-a="close-recipe">調理にもどる</button></div>
+  </div>
+</div>
+
+<div class="overlay" id="ov-pause" hidden>
+  <div class="panel" style="max-width:360px;text-align:center">
+    <h2>休憩中</h2>
+    <p>鉄板の火も止めています。</p>
+    <div class="choices"><button class="btn go" data-a="pause">営業再開</button></div>
+  </div>
+</div>
+
+<div class="overlay" id="ov-result" hidden>
+  <div class="panel" id="result"></div>
+</div>
+
+<div class="overlay" id="ov-rank" hidden>
+  <div class="panel">
+    <h2>みんなのランキング</h2>
+    <div class="tabs">
+      <button class="btn small" data-a="rank-tab" data-v="normal" aria-pressed="true">ふつう</button>
+      <button class="btn small" data-a="rank-tab" data-v="easy" aria-pressed="false">やさしい</button>
+    </div>
+    <div class="rank-list" id="rank-list"></div>
+    <div class="choices"><button class="btn go" data-a="rank-close">とじる</button></div>
+  </div>
+</div>
+
+<div id="toasts" aria-live="polite"></div>
+
+<script>
+const INK='#1f2d33';
+const DISH={
+  burger:{name:'しらすライスバーガー',short:'ライスバーガー',price:650},
+  soba:{name:'しらすと大葉の塩焼きそば',short:'塩焼きそば',price:700},
+  soup:{name:'しらすとたまごのスープ',short:'たまごスープ',price:350},
+};
+const BURGER_ORDER=['rice','lettuce','egg','tomato','shirasu','jelly','rice'];
+const LAYER={rice:'ライス',lettuce:'レタス',egg:'たまご',tomato:'トマト',shirasu:'しらす',jelly:'ジュレ'};
+const GRILL={patty:{name:'ライスパテ',cook:5,burn:13},egg:{name:'目玉焼き',cook:4,burn:11},soba:{name:'焼きそば',cook:6,burn:26}};
+const SOBA_ACTS=[['shirasu_ooba','しらす＋大葉'],['shiodare','塩だれ'],['dashishio','だし塩'],['plate','器に盛る']];
+const SHIFT=180, TRAY_MAX=4, COUNTER_MAX=5;
+const $=s=>document.querySelector(s);
+let S=null, mode='easy', last=0, audio=null, muted=false;
+
+/* みんなのランキング（Googleスプレッドシートに送る）。
+   受信先の URL は公開版（GitHub Pages）を作るときだけ window.KITCHEN_RANKING_URL に入れる。
+   claude.ai のアーティファクトでは外部へ送れないため、URL がなければ機能ごと表示しない。 */
+const RANKING_URL=window.KITCHEN_RANKING_URL||'';
+const GAME_VERSION='1.0';
+let rankTab='normal';
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+function newId(){
+  try{if(crypto.randomUUID)return crypto.randomUUID();}catch(e){}
+  return Date.now().toString(36)+'-'+Math.random().toString(36).slice(2,12);
+}
+function readKey(k){try{return localStorage.getItem(k)}catch(e){return null}}
+function writeKey(k,v){try{localStorage.setItem(k,v)}catch(e){}}
+function clientId(){let id=readKey('toriyons-client');if(!id){id=newId();writeKey('toriyons-client',id);}return id;}
+function rankOf(money){return money>=9000?'S':money>=6000?'A':money>=3500?'B':'C';}
+
+/* ---------- icons ---------- */
+function icon(d,wrapped=true){
+  const st=`stroke="${INK}" stroke-width="1.8"`;
+  if(d==='burger') return `<svg viewBox="0 0 40 40" aria-hidden="true"><rect x="6" y="7" width="28" height="9" rx="4.5" fill="#f1e6c9" ${st}/><rect x="4.5" y="16" width="31" height="3.6" rx="1.8" fill="#6cbf4f" ${st}/><rect x="6" y="19.6" width="28" height="3.4" fill="#fffdf5" ${st}/><rect x="6" y="23" width="28" height="3" fill="#e5483d" ${st}/><rect x="6" y="26" width="28" height="8" rx="4" fill="#f1e6c9" ${st}/>${wrapped?`<path d="M5 22h30v13H5z" fill="#fff" ${st} opacity=".92"/><path d="M5 27h30" stroke="#e9564c" stroke-width="1.5"/>`:''}</svg>`;
+  if(d==='soba') return `<svg viewBox="0 0 40 40" aria-hidden="true"><ellipse cx="20" cy="27" rx="17" ry="8" fill="#fff" ${st}/><ellipse cx="20" cy="23" rx="11.5" ry="7" fill="#d9a35a" ${st}/><path d="M12 22q4-3 8 0t8 0M13 25q4-3 8 0t7 0" stroke="#a96f2c" stroke-width="1.2" fill="none"/><ellipse cx="16" cy="20" rx="3" ry="1.8" fill="#3f9a3a"/><ellipse cx="23" cy="19.5" rx="2.4" ry=".9" fill="#fff" stroke="#999" stroke-width=".4"/><ellipse cx="20" cy="22.5" rx="2.4" ry=".9" fill="#fff" stroke="#999" stroke-width=".4"/></svg>`;
+  return `<svg viewBox="0 0 40 40" aria-hidden="true"><path d="M8 13h24l-3 22H11z" fill="#fff" ${st}/><path d="M9 20h22" stroke="#3fb8a8" stroke-width="2"/><ellipse cx="20" cy="13" rx="12" ry="3.4" fill="#f2c94c" ${st}/><circle cx="16" cy="12.6" r="1.2" fill="#4caf50"/><circle cx="23" cy="13.4" r="1.2" fill="#4caf50"/><ellipse cx="19.5" cy="12.4" rx="2" ry=".8" fill="#fff"/></svg>`;
+}
+function plateSVG(p){
+  const st=`stroke="${INK}" stroke-width="1.8"`;
+  if(!p) return `<svg viewBox="0 0 80 50"><ellipse cx="40" cy="30" rx="34" ry="14" fill="#fff" ${st}/><ellipse cx="40" cy="28" rx="22" ry="8" fill="none" stroke="#c9d3d8" stroke-width="1.5"/></svg>`;
+  let t='';
+  if(p.tops.includes('shirasu')) t+=[[30,20],[44,18],[50,24],[36,26],[42,23]].map(([x,y])=>`<ellipse cx="${x}" cy="${y}" rx="3.4" ry="1.2" fill="#fff" stroke="#888" stroke-width=".4"/>`).join('');
+  if(p.tops.includes('ooba')) t+=`<path d="M38 14q6 2 4 8q-6-1-4-8z" fill="#3f9a3a" ${st} stroke-width="1"/><path d="M46 16q5 3 2 8q-5-2-2-8z" fill="#4fae47" stroke="${INK}" stroke-width="1"/>`;
+  return `<svg viewBox="0 0 80 50"><ellipse cx="40" cy="31" rx="34" ry="14" fill="#fff" ${st}/><ellipse cx="40" cy="25" rx="22" ry="11" fill="#d9a35a" ${st}/><path d="M22 23q6-4 12 0t12 0t12 0M24 28q6-4 12 0t12 0t10 0" stroke="#a96f2c" stroke-width="1.4" fill="none"/>${t}</svg>`;
+}
+function cupSVG(log){
+  const st=`stroke="${INK}" stroke-width="1.8"`;
+  const poured=log.includes('pour');
+  let t='';
+  if(log.includes('negi')) t+=[[30,13],[44,14],[38,11],[50,12]].map(([x,y])=>`<circle cx="${x}" cy="${y}" r="2" fill="#5bb04b" stroke="${INK}" stroke-width=".6"/>`).join('');
+  if(log.includes('shirasu')) t+=[[34,14],[42,12],[47,15],[28,12]].map(([x,y])=>`<ellipse cx="${x}" cy="${y}" rx="3" ry="1.1" fill="#fff" stroke="#888" stroke-width=".4"/>`).join('');
+  return `<svg viewBox="0 0 80 64"><path d="M20 12h40l-5 46H25z" fill="#fff" ${st}/><path d="M22 28h36" stroke="#3fb8a8" stroke-width="3"/>${poured?`<ellipse cx="40" cy="12.5" rx="20" ry="5" fill="#f2c94c" ${st}/><path d="M30 12q4-2 7 0M43 13q4-2 7 0" stroke="#fff6c8" stroke-width="1.3" fill="none"/>`:`<ellipse cx="40" cy="12.5" rx="20" ry="5" fill="#eef2f3" ${st}/>`}${t}</svg>`;
+}
+function custSVG(c){
+  const {skin,hair,shirt,style}=c.look;
+  const m=c.finished?'happy':c.mood;
+  const L=`stroke="${INK}" stroke-width="2.4" fill="none" stroke-linecap="round"`;
+  const mouth=m==='happy'?`<path d="M33 53q7 7 14 0" ${L}/>`:m==='ok'?`<path d="M34 55h12" ${L}/>`:`<path d="M33 57q7-6 14 0" ${L}/>`;
+  const brows=m==='angry'?`<path d="M28 37l7 2.5M52 37l-7 2.5" ${L}/>`:'';
+  let back='',front='';
+  if(style===0) front=`<path d="M18 44c0-15 10-25 22-25s22 10 22 25c-5-7-12-10-22-10s-17 3-22 10z" fill="${hair}" stroke="${INK}" stroke-width="2"/>`;
+  if(style===1){back=`<path d="M16 44c0-17 11-27 24-27s24 10 24 27v26h-9V46H25v24h-9z" fill="${hair}" stroke="${INK}" stroke-width="2"/>`;front=`<path d="M19 42c1-13 10-21 21-21s20 8 21 21c-8-5-14-7-21-7s-13 2-21 7z" fill="${hair}"/>`;}
+  if(style===2) front=`<path d="M18 40c0-13 10-21 22-21s22 8 22 21z" fill="${hair}" stroke="${INK}" stroke-width="2"/><rect x="40" y="36" width="30" height="6" rx="3" fill="${hair}" stroke="${INK}" stroke-width="2"/>`;
+  if(style===3) front=`<circle cx="40" cy="17" r="8" fill="${hair}" stroke="${INK}" stroke-width="2"/><path d="M18 44c0-15 10-25 22-25s22 10 22 25c-5-7-12-10-22-10s-17 3-22 10z" fill="${hair}" stroke="${INK}" stroke-width="2"/>`;
+  return `<svg class="cust-svg" viewBox="0 0 80 92" aria-hidden="true">${back}<path d="M12 92c0-18 12-28 28-28s28 10 28 28z" fill="${shirt}" stroke="${INK}" stroke-width="2.2"/><circle cx="40" cy="45" r="21" fill="${skin}" stroke="${INK}" stroke-width="2.2"/>${front}<circle cx="32" cy="45" r="2.6" fill="${INK}"/><circle cx="48" cy="45" r="2.6" fill="${INK}"/><circle cx="27" cy="52" r="3.5" fill="#f08f8f" opacity=".45"/><circle cx="53" cy="52" r="3.5" fill="#f08f8f" opacity=".45"/>${brows}${mouth}</svg>`;
+}
+
+/* ---------- game state ---------- */
+function newGame(m){
+  mode=m;
+  S={time:SHIFT,money:0,rep:5,happy:0,angry:0,fails:0,sold:0,burnt:0,
+    grill:[null,null,null,null],stock:{patty:0,egg:0},
+    burger:[],plate:null,soup:[],counter:[],sel:null,
+    customers:[],spawnIn:1.2,nextId:1,itemId:1,running:true,over:false,runId:newId(),submitted:false};
+  document.body.classList.toggle('easy',m==='easy');
+  document.querySelectorAll('.easy-only').forEach(e=>e.hidden=m!=='easy');
+  last=0; renderAll();
+}
+const rand=(a,b)=>a+Math.random()*(b-a);
+const pick=a=>a[Math.floor(Math.random()*a.length)];
+const progress=()=>1-S.time/SHIFT;
+function spawn(){
+  const pr=progress();
+  const n=pr<.25?1:(Math.random()<.3+.35*pr?2:1);
+  const pool=['burger','soba','soup'];
+  const order=[];
+  while(order.length<n){const d=pick(pool);if(!order.includes(d))order.push(d);}
+  let max=(52+30*(n-1))*(1-.22*pr)*(mode==='easy'?1.5:1);
+  S.customers.push({id:S.nextId++,order,done:order.map(()=>false),p:max,max,age:0,mood:'happy',say:'',sayT:0,finished:false,leaveIn:0,
+    look:{skin:pick(['#f6d3b3','#eec29b','#d9a57c','#f9e0c7']),hair:pick(['#2b2420','#5a3a22','#8a5a2b','#c9c2b8','#23324a','#e07a3f']),
+      shirt:pick(['#f2c94c','#6fa8dc','#e9564c','#8bc34a','#b39ddb','#ff9e80','#4db6ac']),style:Math.floor(Math.random()*4)}});
+  beep(660,.06);beep(990,.08);
+}
+function nextInterval(){const pr=progress();return (rand(11,16)*(1-pr)+rand(6,9)*pr)*(mode==='easy'?1.25:1);}
+function slotStatus(g){const it=GRILL[g.type];return g.t<it.cook?'raw':g.t<it.burn?'done':'burnt';}
+function moodOf(c){const r=c.p/c.max;return r>.5?'happy':r>.25?'ok':'angry';}
+
+/* ---------- judges ---------- */
+function judgeBurger(st){
+  for(let i=0;i<Math.max(st.length,BURGER_ORDER.length);i++){
+    if(i>=BURGER_ORDER.length) return '具を重ねすぎ';
+    if(i>=st.length) return `${LAYER[BURGER_ORDER[i]]}が足りない`;
+    if(st[i]!==BURGER_ORDER[i]) return `下から${i+1}段目は${LAYER[BURGER_ORDER[i]]}`;
+  }
+  return '';
+}
+function judgeSoba(p){
+  const L=p.log,r=[];
+  if(!L.includes('shirasu_ooba')) r.push('焼きそばにしらすと大葉が入っていない');
+  else if(L[0]!=='shirasu_ooba') r.push('具を入れる前に味付けしている');
+  if(!L.includes('shiodare')) r.push('塩だれが入っていない');
+  if(!L.includes('dashishio')) r.push('だし塩が振られていない');
+  if(!p.tops.includes('shirasu')) r.push('仕上げのしらすがない');
+  if(!p.tops.includes('ooba')) r.push('仕上げの大葉がない');
+  return r[0]||'';
+}
+function judgeSoup(L){
+  if(!L.includes('pour')) return 'たまごスープが入っていない';
+  if(L[0]!=='pour') return 'スープより先に具を入れている';
+  if(!L.includes('negi')) return 'ねぎがのっていない';
+  if(!L.includes('shirasu')) return 'しらすがのっていない';
+  return '';
+}
+function toCounter(dish,reason){
+  if(S.counter.length>=COUNTER_MAX){toast('カウンターがいっぱい。先に提供しよう','bad');return false;}
+  S.counter.push({id:S.itemId++,dish,ok:!reason,reason});
+  beep(780,.06);return true;
+}
+
+/* ---------- actions ---------- */
+const A={
+  place(v){
+    const i=S.grill.findIndex(g=>!g);
+    if(i<0){toast('鉄板がいっぱいです','bad');return;}
+    S.grill[i]={type:v,t:0,log:[]};beep(300,.12,'sawtooth',.03);renderGrill();
+  },
+  slot(_,i){
+    const g=S.grill[i];if(!g)return;
+    const st=slotStatus(g);
+    if(st==='raw'){toast(`${GRILL[g.type].name}はまだ焼けていません`);return;}
+    if(st==='burnt'){S.grill[i]=null;S.burnt++;toast('こげてしまったので捨てました','bad');renderGrill();return;}
+    if(g.type==='soba'){toast('下のボタンで具と味付けをしよう');return;}
+    if(S.stock[g.type]>=TRAY_MAX){toast('保温トレイがいっぱいです','bad');return;}
+    S.stock[g.type]++;S.grill[i]=null;beep(880,.06);renderGrill();renderBurger();
+  },
+  soba(v,i){
+    const g=S.grill[i];if(!g||g.type!=='soba'||slotStatus(g)!=='done')return;
+    if(v==='plate'){
+      if(S.plate){toast('盛り付け台に焼きそばがあります。先に仕上げよう','bad');return;}
+      S.plate={log:g.log.slice(),tops:[]};S.grill[i]=null;beep(520,.08);renderGrill();renderSide();return;
+    }
+    if(g.log.includes(v))return;
+    g.log.push(v);beep(600,.05);renderGrill();
+  },
+  layer(v){
+    if(S.burger.length>=9){toast('これ以上重ねられません','bad');return;}
+    if(v==='rice'||v==='egg'){
+      const k=v==='rice'?'patty':'egg';
+      if(S.stock[k]<=0){toast(v==='rice'?'焼けたライスパテがありません':'焼けた目玉焼きがありません','bad');return;}
+      S.stock[k]--;renderGrillTray();
+    }
+    S.burger.push(v);beep(500+S.burger.length*40,.05);renderBurger();
+  },
+  wrap(){
+    if(!S.burger.length){toast('まだ何も重ねていません');return;}
+    if(!toCounter('burger',judgeBurger(S.burger)))return;
+    S.burger=[];renderBurger();renderCounter();
+  },
+  'burger-clear'(){if(S.burger.length){S.burger=[];toast('バーガーを作り直します');renderBurger();}},
+  top(v){
+    if(!S.plate)return;
+    if(!S.plate.tops.includes(v)){S.plate.tops.push(v);beep(640,.05);}
+    renderSide();
+  },
+  'plate-serve'(){if(!S.plate)return;if(!toCounter('soba',judgeSoba(S.plate)))return;S.plate=null;renderSide();renderCounter();},
+  'plate-clear'(){if(S.plate){S.plate=null;toast('焼きそばを捨てました');renderSide();}},
+  soup(v){if(!S.soup.includes(v)){S.soup.push(v);beep(v==='pour'?420:640,.06);}renderSide();},
+  'soup-serve'(){if(!S.soup.length){toast('カップが空です');return;}if(!toCounter('soup',judgeSoup(S.soup)))return;S.soup=[];renderSide();renderCounter();},
+  'soup-clear'(){if(S.soup.length){S.soup=[];toast('スープを作り直します');renderSide();}},
+  pick(v){v=+v;S.sel=S.sel===v?null:v;renderCounter();},
+  trash(){
+    if(S.sel==null){toast('捨てる品をカウンターで選んでください');return;}
+    S.counter=S.counter.filter(x=>x.id!==S.sel);S.sel=null;toast('品を捨てました');renderCounter();
+  },
+  cust(v){serveTo(+v);},
+};
+function serveTo(cid){
+  const c=S.customers.find(x=>x.id===cid);if(!c||c.finished)return;
+  const need=c.order.filter((d,i)=>!c.done[i]);
+  const item=S.sel!=null?S.counter.find(x=>x.id===S.sel):S.counter.find(x=>need.includes(x.dish));
+  if(!item){toast(S.counter.length?'このお客さんの注文の品がカウンターにありません':'カウンターに完成品がありません');return;}
+  const idx=c.order.findIndex((d,i)=>d===item.dish&&!c.done[i]);
+  if(idx<0){say(c,'それは頼んでないよ');return;}
+  S.counter=S.counter.filter(x=>x!==item);S.sel=null;
+  if(item.ok){
+    c.done[idx]=true;
+    const r=c.p/c.max,tip=r>.6?100:r>.3?50:0;
+    S.money+=DISH[item.dish].price+tip;S.sold++;
+    toast(`${DISH[item.dish].short} ${DISH[item.dish].price}円${tip?` ＋チップ${tip}円`:''}`,'good');
+    beep(1046,.08);beep(1318,.12);
+    if(c.done.every(Boolean)){c.finished=true;c.leaveIn=1.3;S.happy++;say(c,'ごちそうさま！');}
+    else say(c,'おいしそう！');
+  }else{
+    S.rep--;S.fails++;say(c,'注文とちがう…');
+    toast(`作り方ちがい：${item.reason}`,'bad');beep(180,.25,'square',.04);
+  }
+  renderAll();
+  if(S.rep<=0)endGame('rep');
+}
+function say(c,t){c.say=t;c.sayT=1.8;renderCustomers();}
+
+/* ---------- loop ---------- */
+function loop(ts){
+  requestAnimationFrame(loop);
+  if(!S||!S.running||S.over){last=0;return;}
+  if(!last)last=ts;
+  const dt=Math.min(.1,(ts-last)/1000);last=ts;
+  update(dt);
+}
+function update(dt){
+  S.time-=dt;
+  if(S.time<=0){S.time=0;renderTop();endGame('time');return;}
+  let g=false;
+  S.grill.forEach(s=>{if(!s)return;const b=slotStatus(s);s.t+=dt;const a=slotStatus(s);
+    if(a!==b){g=true;if(a==='done')beep(880,.07);if(a==='burnt')beep(150,.2,'square',.04);}});
+  if(g)renderGrill();else updateGrillBars();
+  let cc=false;
+  for(const c of [...S.customers]){
+    c.age+=dt;
+    if(c.sayT>0){c.sayT-=dt;if(c.sayT<=0){c.say='';cc=true;}}
+    if(c.finished){c.leaveIn-=dt;if(c.leaveIn<=0){S.customers=S.customers.filter(x=>x!==c);cc=true;}continue;}
+    c.p-=dt;
+    const m=moodOf(c);if(m!==c.mood){c.mood=m;cc=true;}
+    if(c.p<=0){S.customers=S.customers.filter(x=>x!==c);S.rep--;S.angry++;cc=true;
+      toast('待ちきれずにお客さんが帰ってしまった…','bad');beep(200,.3,'triangle',.05);renderTop();
+      if(S.rep<=0){renderCustomers();endGame('rep');return;}}
+  }
+  S.spawnIn-=dt;
+  if(S.spawnIn<=0){
+    if(S.customers.length<3&&S.time>12){spawn();cc=true;}
+    S.spawnIn=S.customers.length>=3?2:nextInterval();
+    if(!S.customers.length)S.spawnIn=Math.min(S.spawnIn,2);
+  }
+  if(cc)renderCustomers();else updateCustBars();
+  renderTime();
+}
+
+/* ---------- render ---------- */
+function renderAll(){renderTop();renderCustomers();renderCounter();renderGrill();renderBurger();renderSide();}
+function fmt(t){t=Math.ceil(t);return `${Math.floor(t/60)}:${String(t%60).padStart(2,'0')}`;}
+function renderTime(){$('#v-time').textContent=fmt(S.time);$('#st-time').classList.toggle('low',S.time<=30);}
+function renderTop(){
+  renderTime();
+  $('#v-money').textContent=S.money.toLocaleString()+'円';
+  $('#v-rep').innerHTML=[0,1,2,3,4].map(i=>i<S.rep?'♥':'<span class="off">♥</span>').join('');
+}
+function renderCustomers(){
+  const el=$('#customers');
+  if(!S.customers.length){el.innerHTML=`<div class="empty-q">${S.time>12?'次のお客さんを待っています…':'まもなく閉店です'}</div>`;return;}
+  el.innerHTML=S.customers.map(c=>`
+    <button class="cust${c.age<.45?' enter':''}" data-a="cust" data-v="${c.id}" data-cid="${c.id}" aria-label="お客さん${c.id}番に提供">
+      ${c.say?`<span class="say">${c.say}</span>`:''}
+      <div class="ticket"><div class="no"><span>伝票 No.${String(c.id).padStart(3,'0')}</span><span>${c.order.length}品</span></div>
+        <ul>${c.order.map((d,i)=>`<li class="${c.done[i]?'done':''}">${icon(d)}${DISH[d].short}</li>`).join('')}</ul></div>
+      ${custSVG(c)}
+      <div class="pbar"><i></i></div>
+    </button>`).join('');
+  updateCustBars();
+}
+function updateCustBars(){
+  for(const c of S.customers){
+    const i=document.querySelector(`[data-cid="${c.id}"] .pbar i`);if(!i)continue;
+    const r=c.finished?1:Math.max(0,c.p/c.max);
+    i.style.width=(r*100)+'%';
+    i.style.background=r>.5?'var(--ok)':r>.25?'var(--warn)':'var(--bad)';
+  }
+}
+function renderCounter(){
+  const el=$('#counter');
+  if(!S.counter.length){el.innerHTML='<span class="hint">ここに完成品が並びます（最大5品）</span>';return;}
+  el.innerHTML=S.counter.map(x=>`<button class="citem${S.sel===x.id?' sel':''}" data-a="pick" data-v="${x.id}">${icon(x.dish)}${DISH[x.dish].short}</button>`).join('');
+}
+function renderGrill(){
+  $('#grill').innerHTML=S.grill.map((g,i)=>{
+    if(!g)return `<div class="slot empty">空き</div>`;
+    const st=slotStatus(g),it=GRILL[g.type];
+    const tops=g.type==='soba'&&g.log.includes('shirasu_ooba')?'<span class="t-shirasu"></span><span class="t-ooba"></span>':'';
+    const label=st==='raw'?`${it.name}<br>焼いています`:st==='burnt'?'こげた…<br>タップで捨てる':g.type==='soba'?'焼けた！<br>具と味付け':`${it.name} 焼けた！<br>タップでトレイへ`;
+    const acts=g.type==='soba'&&st==='done'?`<div class="soba-acts">${SOBA_ACTS.map(([k,n])=>`<button class="mini${k==='plate'?' plate':''}" data-a="soba" data-i="${i}" data-v="${k}" ${k!=='plate'&&g.log.includes(k)?'disabled':''}>${n}</button>`).join('')}</div>`:'';
+    return `<div class="slot ${st}" data-slot="${i}"><button class="slot-hit" data-a="slot" data-i="${i}"><div class="food ${g.type} ${st==='burnt'?'burnt':''}">${tops}</div><span class="slot-label">${label}</span></button><div class="bar"><i></i></div>${acts}</div>`;
+  }).join('');
+  updateGrillBars();renderGrillTray();
+}
+function updateGrillBars(){
+  S.grill.forEach((g,i)=>{
+    if(!g)return;const el=document.querySelector(`[data-slot="${i}"]`);if(!el)return;
+    const it=GRILL[g.type],st=slotStatus(g),bar=el.querySelector('.bar i'),food=el.querySelector('.food');
+    food.style.setProperty('--p',Math.min(1,g.t/it.cook));
+    if(st==='raw'){bar.style.width=(g.t/it.cook*100)+'%';bar.style.background='var(--warn)';}
+    else if(st==='done'){bar.style.width=((1-(g.t-it.cook)/(it.burn-it.cook))*100)+'%';bar.style.background=(g.t-it.cook)/(it.burn-it.cook)>.6?'var(--bad)':'var(--ok)';}
+    else{bar.style.width='100%';bar.style.background='#5a3a2a';}
+  });
+}
+function renderGrillTray(){
+  $('#tray').innerHTML=`保温トレイ
+    <span class="ti"><span class="mini-patty"></span>ライスパテ <span class="n">${S.stock.patty}</span></span>
+    <span class="ti"><span class="mini-egg"></span>目玉焼き <span class="n">${S.stock.egg}</span></span>`;
+  const r=document.querySelector('[data-v="rice"] .cnt'),e=document.querySelector('[data-v="egg"][data-a="layer"] .cnt');
+  if(r){r.textContent=S.stock.patty;r.closest('button').disabled=S.stock.patty<=0;}
+  if(e){e.textContent=S.stock.egg;e.closest('button').disabled=S.stock.egg<=0;}
+}
+function renderBurger(){
+  const b=S.burger;
+  $('#board').innerHTML=b.length?b.map(k=>`<div class="layer l-${k}"></div>`).join(''):'<div class="ph">まな板の上に、下から順に重ねていきます</div>';
+  const ing=[['rice','ライス','#efe8d4',S.stock.patty],['lettuce','レタス','#6cbf4f'],['egg','たまご','radial-gradient(circle,#f5b324 0 4px,#fff 4.5px)',S.stock.egg],
+    ['tomato','トマト','#e5483d'],['shirasu','しらす','#f3efe4'],['jelly','ジュレ','rgba(196,120,40,.6)']];
+  $('#ing').innerHTML=ing.map(([k,n,c,cnt])=>`<button class="btn" data-a="layer" data-v="${k}" ${cnt!==undefined&&cnt<=0?'disabled':''}><span class="chip" style="background:${c}"></span>${n}${cnt!==undefined?`<span class="cnt">${cnt}</span>`:''}</button>`).join('');
+  const h=$('#burger-hint');
+  if(mode!=='easy'){h.innerHTML='';return;}
+  const okPrefix=b.every((k,i)=>BURGER_ORDER[i]===k)&&b.length<=7;
+  if(!okPrefix)h.innerHTML='<div class="nexthint bad">順番ちがい！「やり直す」で作り直そう</div>';
+  else if(b.length===7)h.innerHTML='<div class="nexthint">完成！紙でくるもう</div>';
+  else{
+    const nx=BURGER_ORDER[b.length];
+    const lack=(nx==='rice'&&S.stock.patty<=0)?'（鉄板でライスパテを焼こう）':(nx==='egg'&&S.stock.egg<=0)?'（鉄板で目玉焼きを焼こう）':'';
+    h.innerHTML=`<div class="nexthint">次は「${LAYER[nx]}」${lack}</div>`;
+  }
+}
+function renderSide(){
+  const p=S.plate;
+  $('#plate-area').innerHTML=`<h4>焼きそば盛り付け <small>${p?'仕上げをのせる':'鉄板の「器に盛る」でここへ'}</small></h4>
+    <div class="vis">${plateSVG(p)}</div>
+    <div class="row">
+      <button class="btn small" data-a="top" data-v="shirasu" ${!p||p.tops.includes('shirasu')?'disabled':''}><span class="chip" style="background:#f3efe4"></span>しらすをのせる</button>
+      <button class="btn small" data-a="top" data-v="ooba" ${!p||p.tops.includes('ooba')?'disabled':''}><span class="chip" style="background:#3f9a3a"></span>大葉をのせる</button>
+    </div>
+    <div class="row"><button class="btn go small" style="flex:1" data-a="plate-serve" ${!p?'disabled':''}>カウンターへ</button><button class="btn small warn" data-a="plate-clear" ${!p?'disabled':''}>捨てる</button></div>
+    ${mode==='easy'?'<div class="recipe-card"><b>焼きそば</b><ol><li>焼きそばを焼く</li><li>しらすと大葉を入れる</li><li>塩だれ・だし塩で味をととのえる</li><li>器に盛る</li><li>仕上げにしらすと大葉をのせる</li></ol></div>':''}`;
+  const L=S.soup;
+  $('#soup-area').innerHTML=`<h4>たまごスープ <small>カップに作る</small></h4>
+    <div class="vis">${cupSVG(L)}</div>
+    <div class="row">
+      <button class="btn small" data-a="soup" data-v="pour" ${L.includes('pour')?'disabled':''}><span class="chip" style="background:#f2c94c"></span>スープをそそぐ</button>
+      <button class="btn small" data-a="soup" data-v="negi" ${L.includes('negi')?'disabled':''}><span class="chip" style="background:#5bb04b"></span>ねぎ</button>
+      <button class="btn small" data-a="soup" data-v="shirasu" ${L.includes('shirasu')?'disabled':''}><span class="chip" style="background:#f3efe4"></span>しらす</button>
+    </div>
+    <div class="row"><button class="btn go small" style="flex:1" data-a="soup-serve" ${!L.length?'disabled':''}>カウンターへ</button><button class="btn small warn" data-a="soup-clear" ${!L.length?'disabled':''}>作り直す</button></div>
+    ${mode==='easy'?'<div class="recipe-card"><b>スープ</b><ol><li>たまごスープをカップにそそぐ</li><li>ねぎとしらすをのせる</li></ol></div>':''}`;
+}
+
+/* ---------- overlays ---------- */
+function bestScore(){try{return +localStorage.getItem('shirasu-kc-best')||0}catch(e){return 0}}
+function saveBest(v){try{localStorage.setItem('shirasu-kc-best',String(v))}catch(e){}}
+function endGame(why){
+  if(S.over)return;S.over=true;S.running=false;
+  const best=bestScore(),isBest=S.money>best;if(isBest)saveBest(S.money);
+  const rank=rankOf(S.money);
+  const comment={S:'行列のできるキッチンカー！',A:'手際のいい調理でした',B:'なかなかの売れ行き',C:'まずはレシピを覚えよう'}[rank];
+  $('#result').innerHTML=`<h2>${why==='time'?'本日の営業終了':'評判が下がって閉店…'}</h2>
+    <div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap"><div class="rank">${rank}</div><div><b style="font-size:18px">${comment}</b><br><small>${mode==='easy'?'やさしい':'ふつう'}モード${isBest?'・自己ベスト更新！':''}</small></div></div>
+    <div class="result-grid">
+      <div><span>売上</span><strong>${S.money.toLocaleString()}円</strong></div>
+      <div><span>提供した品</span><strong>${S.sold}品</strong></div>
+      <div><span>満足して帰ったお客さん</span><strong>${S.happy}人</strong></div>
+      <div><span>待たせて帰したお客さん</span><strong>${S.angry}人</strong></div>
+      <div><span>作り方ちがい</span><strong>${S.fails}品</strong></div>
+      <div><span>こがした食材</span><strong>${S.burnt}個</strong></div>
+    </div>
+    ${RANKING_URL?`<div class="rankbox">
+      <b>みんなのランキングに参加する（${mode==='easy'?'やさしい':'ふつう'}部門）</b>
+      <div class="row"><input id="rank-nick" maxlength="12" placeholder="ニックネーム（12文字まで）" value="${esc(readKey('toriyons-nick')||'')}" aria-label="ニックネーム"><button class="btn go" data-a="rank-send" id="rank-send">ランキングに送る</button></div>
+      <p class="note" id="rank-msg" role="status">送るのはニックネームと結果だけです。本名は入れないでください。</p>
+    </div>`:''}
+    <div class="choices"><button class="btn go" data-a="start" data-v="${mode}">もう一度</button><button class="btn" data-a="title">タイトルへ</button>${RANKING_URL?'<button class="btn" data-a="rank-open">みんなのランキング</button>':''}</div>`;
+  $('#ov-result').hidden=false;beep(523,.1);beep(659,.1);beep(784,.2);
+}
+function fillStatic(){
+  $('#menu3').innerHTML=Object.entries(DISH).map(([k,d])=>`<div>${icon(k)}${d.name}<em>${d.price}円</em></div>`).join('');
+  $('#rcp').innerHTML=`
+    <section><h3>${icon('burger')}しらすライスバーガー（${DISH.burger.price}円）</h3><ol>
+      <li>鉄板でライスのパテを焼く（1個に2枚）</li><li>鉄板で目玉焼きを焼く</li>
+      <li>バーガー台で下から順に重ねる<div class="stack-order">${BURGER_ORDER.map(k=>`<span>${LAYER[k]}</span>`).join('→')}</div></li>
+      <li>最後に紙でくるむ</li></ol></section>
+    <section><h3>${icon('soba')}しらすと大葉の塩焼きそば（${DISH.soba.price}円）</h3><ol>
+      <li>鉄板でやきそばを焼く</li><li>しらすと大葉を入れる</li><li>塩だれとだし塩を振って味をととのえる</li><li>器に盛る</li><li>仕上げにしらすと大葉をのせる</li></ol></section>
+    <section><h3>${icon('soup')}しらすとたまごのスープ（${DISH.soup.price}円）</h3><ol>
+      <li>たまごスープをカップにそそぐ</li><li>ねぎとしらすをのせる</li></ol></section>`;
+  const b=bestScore();$('#best').textContent=b?`自己ベスト：${b.toLocaleString()}円`:'';
+}
+
+/* ---------- ranking ---------- */
+async function submitRanking(){
+  const btn=$('#rank-send'),msg=$('#rank-msg'),nick=$('#rank-nick').value.trim();
+  if(!nick){msg.textContent='ニックネームを入れてください。';return;}
+  if(S.submitted){msg.textContent='この結果は送信済みです。';return;}
+  btn.disabled=true;msg.textContent='送信しています…';writeKey('toriyons-nick',nick);
+  const body={action:'submit',nick,money:S.money,rank:rankOf(S.money),sold:S.sold,happy:S.happy,fails:S.fails,mode,
+    version:GAME_VERSION,runId:S.runId,clientId:clientId()};
+  try{
+    // Content-Type を付けない（text/plain）ことで、Apps Script へ事前確認なしで送れる
+    const j=await (await fetch(RANKING_URL,{method:'POST',body:JSON.stringify(body)})).json();
+    if(j.ok){S.submitted=true;writeKey('toriyons-last-run',S.runId);
+      msg.textContent=`送信しました。${mode==='easy'?'やさしい':'ふつう'}部門で ${j.position}位 / ${j.count}件 です。`;btn.textContent='送信済み';return;}
+    msg.textContent={nick:'そのニックネームは使えません。別の名前にしてください。',too_fast:'少し時間をおいてから送ってください。'}[j.error]||'送信できませんでした。';
+  }catch(e){msg.textContent='送信できませんでした。通信状態を確認してください。';}
+  btn.disabled=false;
+}
+async function openRanking(){
+  $('#ov-rank').hidden=false;
+  document.querySelectorAll('[data-a="rank-tab"]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.v===rankTab)));
+  const box=$('#rank-list');box.innerHTML='<p class="note">読み込んでいます…</p>';
+  try{
+    const j=await (await fetch(`${RANKING_URL}${RANKING_URL.includes('?')?'&':'?'}action=top&limit=50&mode=${rankTab}`)).json();
+    if(!j.ok)throw new Error('bad');
+    if(!j.rows.length){box.innerHTML='<p class="note">まだ記録がありません。最初の1件を送ってみよう。</p>';return;}
+    const mine=readKey('toriyons-last-run');
+    box.innerHTML=`<table><thead><tr><th>順位</th><th>ニックネーム</th><th style="text-align:right">売上</th><th>ランク</th><th style="text-align:right">提供数</th></tr></thead><tbody>${
+      j.rows.map((r,i)=>`<tr class="${r.runId===mine?'mine':''}"><td class="pos">${i+1}</td><td>${esc(r.nick)}</td><td class="num">${Number(r.money).toLocaleString()}円</td><td>${esc(r.rank)}</td><td class="num">${Number(r.sold)}品</td></tr>`).join('')
+    }</tbody></table><p class="note" style="margin-top:6px">全${j.count}件のうち上位${j.rows.length}件</p>`;
+  }catch(e){box.innerHTML='<p class="note">ランキングを読み込めませんでした。時間をおいて開き直してください。</p>';}
+}
+
+/* ---------- toast & sound ---------- */
+function toast(msg,type=''){
+  const box=$('#toasts'),t=document.createElement('div');
+  t.className='toast '+type;t.textContent=msg;box.appendChild(t);
+  while(box.children.length>3)box.firstChild.remove();
+  setTimeout(()=>t.classList.add('out'),1600);setTimeout(()=>t.remove(),2000);
+}
+function beep(f=600,d=.07,type='sine',vol=.05){
+  if(muted||!audio)return;
+  try{const o=audio.createOscillator(),g=audio.createGain(),t=audio.currentTime;
+    o.type=type;o.frequency.value=f;g.gain.setValueAtTime(vol,t);g.gain.exponentialRampToValueAtTime(.0001,t+d);
+    o.connect(g).connect(audio.destination);o.start(t);o.stop(t+d+.02);}catch(e){}
+}
+
+/* ---------- input ---------- */
+document.addEventListener('click',e=>{
+  const b=e.target.closest('[data-a]');if(!b||b.disabled)return;
+  const a=b.dataset.a,v=b.dataset.v,i=b.dataset.i!==undefined?+b.dataset.i:undefined;
+  if(a==='start'){
+    if(!audio){try{audio=new (window.AudioContext||window.webkitAudioContext)()}catch(err){}}
+    ['#ov-start','#ov-result','#ov-recipe','#ov-pause'].forEach(s=>$(s).hidden=true);newGame(v);return;
+  }
+  if(a==='title'){$('#ov-result').hidden=true;fillStatic();$('#ov-start').hidden=false;return;}
+  if(a==='recipe'){if(S&&!S.over)S.running=false;$('#ov-recipe').hidden=false;return;}
+  if(a==='close-recipe'){$('#ov-recipe').hidden=true;if(S&&!S.over&&$('#ov-pause').hidden)S.running=true;return;}
+  if(a==='rank-open'){openRanking();return;}
+  if(a==='rank-close'){$('#ov-rank').hidden=true;return;}
+  if(a==='rank-tab'){rankTab=v;openRanking();return;}
+  if(a==='rank-send'){submitRanking();return;}
+  if(a==='sound'){muted=!muted;b.textContent=muted?'音 OFF':'音 ON';return;}
+  if(a==='pause'){if(!S||S.over)return;S.running=!S.running;$('#ov-pause').hidden=S.running;return;}
+  if(!S||!S.running||S.over)return;
+  if(A[a])A[a](v,i);
+});
+
+fillStatic();
+document.querySelectorAll('.rank-only').forEach(e=>e.hidden=!RANKING_URL);
+newGame('easy');S.running=false;
+S.customers.push({id:0,order:['burger','soup'],done:[false,false],p:40,max:52,age:9,mood:'happy',say:'',sayT:0,finished:false,leaveIn:0,
+  look:{skin:'#f6d3b3',hair:'#5a3a22',shirt:'#f2c94c',style:1}});
+S.grill[0]={type:'patty',t:3,log:[]};S.grill[2]={type:'soba',t:7,log:['shirasu_ooba']};
+S.burger=['rice','lettuce','egg'];renderAll();
+requestAnimationFrame(loop);
+</script>
+</body>
+</html>
