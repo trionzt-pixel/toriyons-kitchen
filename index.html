@@ -9,6 +9,7 @@
 <meta property="og:type" content="website">
 <style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0}img{max-width:100%}</style>
 <script>window.KITCHEN_RANKING_URL="https://script.google.com/macros/s/AKfycbz-rfuckSP1dzlJVm035xn_bzy165-WonwhJOXbz6_31Qvr0pzQ4W2b4pv9_k6j97X2/exec";</script>
+<script>window.KITCHEN_BGM_VIDEO="GNTuPH88FvI";</script>
 <title>とりおんずキッチン</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -218,6 +219,11 @@ button{font-family:inherit;color:inherit}
 .rank-list tr.mine td{background:#fff6c4}
 .rank-list .pos{font-family:var(--display);font-size:16px;width:2.5em}
 .rank-list tr:nth-child(1) .pos{color:#c9961a}.rank-list tr:nth-child(2) .pos{color:#8a98a0}.rank-list tr:nth-child(3) .pos{color:#b06a35}
+.radio{grid-column:1/-1;flex-direction:row;flex-wrap:wrap;align-items:center;gap:12px 16px}
+.radio .player{flex:0 1 356px;min-width:200px;height:200px;border:3px solid var(--ink);border-radius:10px;overflow:hidden;background:var(--grill)}
+.radio .player iframe{display:block;width:100%;height:100%}
+.radio .info{flex:1 1 220px;min-width:0;display:flex;flex-direction:column;gap:6px}
+.radio .info b{font-family:var(--display);font-weight:400;font-size:17px}
 #toasts{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(16px + env(safe-area-inset-bottom,0px));z-index:30;display:flex;flex-direction:column;gap:6px;align-items:center;pointer-events:none;width:min(92vw,420px)}
 .toast{background:var(--ink);color:var(--paper);font-weight:700;font-size:14px;padding:8px 14px;border-radius:12px;box-shadow:0 3px 0 rgba(0,0,0,.25);animation:tin .2s ease-out;text-align:center}
 .toast.good{background:var(--ok)} .toast.bad{background:var(--bad)}
@@ -238,8 +244,10 @@ button{font-family:inherit;color:inherit}
     </div>
     <div class="tools">
       <button class="btn small" data-a="recipe">レシピ</button>
-      <button class="btn small" data-a="sound" id="b-sound">音 ON</button>
+      <button class="btn small bgm-only" data-a="bgm" id="b-bgm" hidden>BGM ON</button>
+      <button class="btn small" data-a="sound" id="b-sound">効果音 ON</button>
       <button class="btn small" data-a="pause">一時停止</button>
+      <button class="btn small warn" data-a="quit">閉店する</button>
     </div>
   </header>
 
@@ -284,6 +292,15 @@ button{font-family:inherit;color:inherit}
       <div class="sub" id="plate-area"></div>
       <div class="sub" id="soup-area"></div>
     </div>
+
+    <div class="station radio bgm-only" hidden>
+      <div class="player"><div id="bgm-player"></div></div>
+      <div class="info">
+        <b>車内ラジオ</b>
+        <span>BGM：みなみちたのうた♪町制60周年記念Ver</span>
+        <span class="note">動画提供：南知多町公式（YouTube）。営業開始と同時に流れ、一時停止・閉店で止まります。</span>
+      </div>
+    </div>
   </section>
 </div>
 
@@ -319,7 +336,15 @@ button{font-family:inherit;color:inherit}
   <div class="panel" style="max-width:360px;text-align:center">
     <h2>休憩中</h2>
     <p>鉄板の火も止めています。</p>
-    <div class="choices"><button class="btn go" data-a="pause">営業再開</button></div>
+    <div class="choices"><button class="btn go" data-a="pause">営業再開</button><button class="btn warn" data-a="quit-yes">ここで閉店する</button></div>
+  </div>
+</div>
+
+<div class="overlay" id="ov-quit" hidden>
+  <div class="panel" style="max-width:380px;text-align:center">
+    <h2>ここで閉店しますか？</h2>
+    <p>今までの売上で結果を出します。ランキングにも送れます。</p>
+    <div class="choices"><button class="btn warn" data-a="quit-yes">閉店して結果を見る</button><button class="btn go" data-a="quit-no">営業をつづける</button></div>
   </div>
 </div>
 
@@ -696,11 +721,11 @@ function renderSide(){
 function bestScore(){try{return +localStorage.getItem('shirasu-kc-best')||0}catch(e){return 0}}
 function saveBest(v){try{localStorage.setItem('shirasu-kc-best',String(v))}catch(e){}}
 function endGame(why){
-  if(S.over)return;S.over=true;S.running=false;
+  if(S.over)return;S.over=true;S.running=false;syncBgm();
   const best=bestScore(),isBest=S.money>best;if(isBest)saveBest(S.money);
   const rank=rankOf(S.money);
   const comment={S:'行列のできるキッチンカー！',A:'手際のいい調理でした',B:'なかなかの売れ行き',C:'まずはレシピを覚えよう'}[rank];
-  $('#result').innerHTML=`<h2>${why==='time'?'本日の営業終了':'評判が下がって閉店…'}</h2>
+  $('#result').innerHTML=`<h2>${{time:'本日の営業終了',quit:'途中で閉店しました',rep:'評判が下がって閉店…'}[why]}</h2>
     <div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap"><div class="rank">${rank}</div><div><b style="font-size:18px">${comment}</b><br><small>${mode==='easy'?'やさしい':'ふつう'}モード${isBest?'・自己ベスト更新！':''}</small></div></div>
     <div class="result-grid">
       <div><span>売上</span><strong>${S.money.toLocaleString()}円</strong></div>
@@ -764,6 +789,30 @@ async function openRanking(){
   }catch(e){box.innerHTML='<p class="note">ランキングを読み込めませんでした。時間をおいて開き直してください。</p>';}
 }
 
+/* ---------- BGM（YouTube の公式埋め込みプレーヤーで再生） ----------
+   動画 ID は公開版（GitHub Pages）を作るときだけ window.KITCHEN_BGM_VIDEO に入れる。
+   claude.ai のアーティファクトでは他サイトを埋め込めないため、ID がなければ表示しない。
+   YouTube の規約に合わせ、プレーヤーは隠さず 200px 以上の大きさで見せる。 */
+const BGM_VIDEO=window.KITCHEN_BGM_VIDEO||'';
+let yt=null,ytReady=false,bgmOn=true;
+function loadBgm(){
+  if(!BGM_VIDEO)return;
+  document.querySelectorAll('.bgm-only').forEach(e=>e.hidden=false);
+  window.onYouTubeIframeAPIReady=()=>{
+    yt=new YT.Player('bgm-player',{videoId:BGM_VIDEO,width:'100%',height:'100%',
+      playerVars:{loop:1,playlist:BGM_VIDEO,playsinline:1,rel:0},
+      events:{onReady:()=>{ytReady=true;try{yt.setVolume(40)}catch(e){}syncBgm();}}});
+  };
+  const s=document.createElement('script');s.src='https://www.youtube.com/iframe_api';document.head.appendChild(s);
+}
+function syncBgm(fromStart){
+  if(!ytReady)return;
+  try{
+    if(bgmOn&&S&&S.running&&!S.over){if(fromStart)yt.seekTo(0,true);yt.playVideo();}
+    else yt.pauseVideo();
+  }catch(e){}
+}
+
 /* ---------- toast & sound ---------- */
 function toast(msg,type=''){
   const box=$('#toasts'),t=document.createElement('div');
@@ -784,23 +833,28 @@ document.addEventListener('click',e=>{
   const a=b.dataset.a,v=b.dataset.v,i=b.dataset.i!==undefined?+b.dataset.i:undefined;
   if(a==='start'){
     if(!audio){try{audio=new (window.AudioContext||window.webkitAudioContext)()}catch(err){}}
-    ['#ov-start','#ov-result','#ov-recipe','#ov-pause'].forEach(s=>$(s).hidden=true);newGame(v);return;
+    ['#ov-start','#ov-result','#ov-recipe','#ov-pause','#ov-rank'].forEach(s=>$(s).hidden=true);newGame(v);syncBgm(true);return;
   }
   if(a==='title'){$('#ov-result').hidden=true;fillStatic();$('#ov-start').hidden=false;return;}
-  if(a==='recipe'){if(S&&!S.over)S.running=false;$('#ov-recipe').hidden=false;return;}
-  if(a==='close-recipe'){$('#ov-recipe').hidden=true;if(S&&!S.over&&$('#ov-pause').hidden)S.running=true;return;}
+  if(a==='recipe'){if(S&&!S.over)S.running=false;$('#ov-recipe').hidden=false;syncBgm();return;}
+  if(a==='close-recipe'){$('#ov-recipe').hidden=true;if(S&&!S.over&&$('#ov-pause').hidden)S.running=true;syncBgm();return;}
   if(a==='rank-open'){openRanking();return;}
   if(a==='rank-close'){$('#ov-rank').hidden=true;return;}
   if(a==='rank-tab'){rankTab=v;openRanking();return;}
   if(a==='rank-send'){submitRanking();return;}
-  if(a==='sound'){muted=!muted;b.textContent=muted?'音 OFF':'音 ON';return;}
-  if(a==='pause'){if(!S||S.over)return;S.running=!S.running;$('#ov-pause').hidden=S.running;return;}
+  if(a==='sound'){muted=!muted;b.textContent=muted?'効果音 OFF':'効果音 ON';return;}
+  if(a==='bgm'){bgmOn=!bgmOn;b.textContent=bgmOn?'BGM ON':'BGM OFF';syncBgm();return;}
+  if(a==='quit'){if(!S||S.over||!$('#ov-start').hidden)return;S.running=false;$('#ov-quit').hidden=false;syncBgm();return;}
+  if(a==='quit-no'){$('#ov-quit').hidden=true;if(S&&!S.over&&$('#ov-pause').hidden)S.running=true;syncBgm();return;}
+  if(a==='quit-yes'){if(!S||S.over)return;$('#ov-quit').hidden=true;$('#ov-pause').hidden=true;endGame('quit');return;}
+  if(a==='pause'){if(!S||S.over)return;S.running=!S.running;$('#ov-pause').hidden=S.running;syncBgm();return;}
   if(!S||!S.running||S.over)return;
   if(A[a])A[a](v,i);
 });
 
 fillStatic();
 document.querySelectorAll('.rank-only').forEach(e=>e.hidden=!RANKING_URL);
+loadBgm();
 newGame('easy');S.running=false;
 S.customers.push({id:0,order:['burger','soup'],done:[false,false],p:40,max:52,age:9,mood:'happy',say:'',sayT:0,finished:false,leaveIn:0,
   look:{skin:'#f6d3b3',hair:'#5a3a22',shirt:'#f2c94c',style:1}});
