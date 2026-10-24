@@ -9,7 +9,7 @@
 <meta property="og:type" content="website">
 <style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0}img{max-width:100%}</style>
 <script>window.KITCHEN_RANKING_URL="https://script.google.com/macros/s/AKfycbz-rfuckSP1dzlJVm035xn_bzy165-WonwhJOXbz6_31Qvr0pzQ4W2b4pv9_k6j97X2/exec";</script>
-<script>window.KITCHEN_BGM_VIDEO="GNTuPH88FvI";</script>
+<script>window.KITCHEN_BGM_VIDEO="sWgEWR8OdrI";</script>
 <title>とりおんずキッチン</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -171,7 +171,8 @@ button{font-family:inherit;color:inherit}
 .sub{background:var(--paper);border:2px solid var(--ink);border-radius:12px;padding:8px;display:flex;flex-direction:column;gap:8px}
 .sub h4{margin:0;font-size:13px;font-weight:900;display:flex;justify-content:space-between}
 .sub h4 small{font-weight:700;color:var(--muted);font-size:11px}
-.vis{display:flex;justify-content:center;align-items:center;height:92px;background:var(--steel);border-radius:8px}
+.vis{display:flex;justify-content:center;align-items:center;height:92px;background:var(--paper);border:2px solid var(--ink);border-radius:8px}
+.col{display:flex;flex-direction:column;gap:12px;min-width:0}
 .vis svg{height:84px;width:auto}
 
 /* overlays */
@@ -229,6 +230,77 @@ button{font-family:inherit;color:inherit}
 .toast.good{background:var(--ok)} .toast.bad{background:var(--bad)}
 .toast.out{opacity:0;transition:opacity .35s}
 @keyframes tin{from{transform:translateY(10px);opacity:0}}
+/* ---- スマホ：上に窓口とカウンター、真ん中に1工程、下に工程タブ ---- */
+button{touch-action:manipulation}
+.menu-btn,.m-only,.tabbar{display:none}
+.menu-panel{max-width:320px;display:flex;flex-direction:column;gap:10px}
+.menu-panel .btn{min-height:48px;font-size:16px}
+.tab{all:unset;cursor:pointer;position:relative;display:flex;flex-direction:column;align-items:center;gap:1px;padding:4px 2px 5px;border-radius:10px;font-size:11px;font-weight:900;line-height:1.1}
+.tab svg{width:30px;height:30px}
+.tab[aria-current="true"]{background:var(--hi);box-shadow:inset 0 0 0 2px var(--ink)}
+.tab:focus-visible{outline:3px solid var(--hi);outline-offset:1px}
+.tab .badge{position:absolute;top:1px;left:calc(50% + 8px);min-width:18px;height:18px;padding:0 5px;border-radius:9px;background:var(--ink);color:var(--paper);font-style:normal;font-size:11px;display:flex;align-items:center;justify-content:center}
+.tab .badge:empty{display:none}
+.tab .badge.alert{background:var(--bad);animation:pulse .9s ease-in-out infinite}
+@keyframes pulse{50%{transform:scale(1.2)}}
+@media (max-width:760px){
+  html,body{height:100%;overflow:hidden}
+  body{-webkit-tap-highlight-color:transparent;-webkit-user-select:none;user-select:none}
+  input{-webkit-user-select:text;user-select:text}
+  #app{height:100%;gap:6px;padding-block:6px 0}
+  .topbar{flex:none;flex-wrap:nowrap;gap:6px;padding:5px 6px 5px 8px;border-width:2px;border-radius:12px;box-shadow:0 3px 0 var(--ink)}
+  .logo,.tools{display:none}
+  .stats{flex:1;min-width:0;flex-wrap:nowrap;gap:4px}
+  .stat{padding:2px 7px;flex:none}
+  .stat span{font-size:9px}
+  .stat strong{font-size:15px}
+  .hearts{font-size:13px;letter-spacing:0}
+  .menu-btn{display:inline-flex;flex:none;min-height:40px}
+  .m-only{display:inline-flex}
+  .window{flex:none;border-width:2px;border-radius:12px;box-shadow:0 3px 0 var(--ink)}
+  .awning{height:12px;border-bottom-width:2px;background-size:40px 100%}
+  #customers{min-height:146px;gap:6px;padding:6px 6px 0}
+  .empty-q{font-size:13px}
+  .ticket{font-size:11px;padding:3px 5px 4px;border-radius:5px}
+  .ticket .no span:last-child{display:none}
+  .ticket li svg{width:18px;height:18px}
+  .cust-svg{width:50px;height:58px}
+  .pbar{width:58px;height:7px;margin-bottom:5px}
+  .cust .say{bottom:66px;font-size:11px;padding:2px 6px}
+  .counter{flex:none;flex-wrap:nowrap;gap:6px;padding:5px 6px 5px 8px;border-width:2px;border-radius:12px;box-shadow:0 3px 0 var(--wood-dk),0 3px 0 2px var(--ink)}
+  .counter h3,.d-only{display:none}
+  #counter{flex-wrap:nowrap;overflow-x:auto;min-height:52px;padding:4px 2px}
+  .counter .hint{font-size:11px}
+  .citem{flex:none;width:58px;height:50px}
+  .counter .btn{flex:none;font-size:12px;padding:4px 8px}
+  .kitchen{flex:1;min-height:0;display:flex;flex-direction:column;gap:8px;overflow-y:auto;overscroll-behavior:contain;padding-bottom:8px;-webkit-overflow-scrolling:touch}
+  .col{display:contents}
+  .station{border-width:2px;border-radius:12px;padding:10px;box-shadow:none}
+  .station[data-st]{display:none}
+  body[data-tab="grill"] .station[data-st="grill"],body[data-tab="burger"] .station[data-st="burger"],
+  body[data-tab="soba"] .station[data-st="soba"],body[data-tab="soup"] .station[data-st="soup"]{display:flex}
+  .station[data-st="grill"] h2,.station[data-st="burger"] h2{display:none}
+  .place-row{order:-1}
+  .place-row{display:grid;grid-template-columns:repeat(3,minmax(0,1fr))}
+  .place-row .btn{flex-direction:column;gap:2px;padding:5px 2px;font-size:13px;white-space:nowrap}
+  .slot{min-height:96px}
+  .btn{min-height:44px;font-size:15px}
+  .btn.small{min-height:40px;font-size:13px}
+  .mini{min-height:36px;font-size:12px}
+  .station .btn{white-space:nowrap}
+  .ing-grid .btn{font-size:14px;gap:4px;padding:6px 2px}
+  .station .row .btn.small{font-size:13px;padding:5px 6px}
+  .station .chip{width:12px;height:12px}
+  .board{min-height:130px}
+  .vis{height:110px}
+  .vis svg{height:100px}
+  .station[data-st="soba"] .row .btn,.station[data-st="soup"] .row .btn{flex:1}
+  .radio{flex-direction:column;align-items:stretch}
+  .radio .player{flex:none;width:100%}
+  .tabbar{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:4px;flex:none;background:var(--paper);border:2px solid var(--ink);border-bottom:0;border-radius:14px 14px 0 0;padding:4px 4px 6px}
+  #toasts{bottom:calc(84px + env(safe-area-inset-bottom,0px))}
+  .panel{padding:16px}
+}
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 </style>
 </head>
@@ -249,6 +321,7 @@ button{font-family:inherit;color:inherit}
       <button class="btn small" data-a="pause">一時停止</button>
       <button class="btn small warn" data-a="quit">閉店する</button>
     </div>
+    <button class="btn small menu-btn" data-a="menu">メニュー</button>
   </header>
 
   <section class="window" aria-label="お客さん">
@@ -259,14 +332,14 @@ button{font-family:inherit;color:inherit}
   <section class="counter" aria-label="提供カウンター">
     <h3>提供カウンター<small>品をえらんで→お客さんをタップ</small></h3>
     <div id="counter"></div>
-    <button class="btn small warn" data-a="trash">選んだ品を捨てる</button>
+    <button class="btn small warn" data-a="trash"><span class="d-only">選んだ品を</span>捨てる</button>
   </section>
 
   <section class="kitchen">
-    <div class="station">
+    <div class="station" data-st="grill">
       <h2>鉄板 <small>焼けたらタップ</small></h2>
       <div id="grill"></div>
-      <div class="row">
+      <div class="row place-row">
         <button class="btn" data-a="place" data-v="patty"><span class="chip" style="background:#efe8d4"></span>ライスパテ</button>
         <button class="btn" data-a="place" data-v="egg"><span class="chip" style="background:radial-gradient(circle,#f5b324 0 4px,#fff 4.5px)"></span>目玉焼き</button>
         <button class="btn" data-a="place" data-v="soba"><span class="chip" style="background:#d39d55"></span>焼きそば</button>
@@ -275,7 +348,7 @@ button{font-family:inherit;color:inherit}
       <div class="recipe-card easy-only"><b>鉄板のコツ</b><br>ライスパテはバーガー1個に2枚。焼けた焼きそばは「しらす＋大葉」→「塩だれ・だし塩」→「器に盛る」。</div>
     </div>
 
-    <div class="station">
+    <div class="station" data-st="burger">
       <h2>ライスバーガー台 <small>下から順に重ねる</small></h2>
       <div id="burger-hint"></div>
       <div class="board" id="board"></div>
@@ -287,21 +360,34 @@ button{font-family:inherit;color:inherit}
       <div class="recipe-card easy-only"><b>重ねる順（下から）</b><br>ライス → レタス → たまご → トマト → しらす → ジュレ → ライス</div>
     </div>
 
-    <div class="station">
-      <h2>盛り付け・スープ</h2>
-      <div class="sub" id="plate-area"></div>
-      <div class="sub" id="soup-area"></div>
+    <div class="col">
+      <div class="station" data-st="soba" id="plate-area"></div>
+      <div class="station" data-st="soup" id="soup-area"></div>
     </div>
 
     <div class="station radio bgm-only" hidden>
       <div class="player"><div id="bgm-player"></div></div>
       <div class="info">
         <b>車内ラジオ</b>
-        <span>BGM：みなみちたのうた♪町制60周年記念Ver</span>
-        <span class="note">動画提供：南知多町公式（YouTube）。営業開始と同時に流れ、一時停止・閉店で止まります。</span>
+        <span>BGM：みなみちたのうた♪ウミひとココロ ver</span>
+        <span class="note">動画提供：ウミひとココロ（YouTube）。営業開始と同時に流れ、一時停止・閉店で止まります。</span>
       </div>
     </div>
   </section>
+
+  <nav class="tabbar" id="tabbar" aria-label="調理場の切り替え"></nav>
+</div>
+
+<div class="overlay" id="ov-menu" hidden>
+  <div class="panel menu-panel">
+    <h2>メニュー</h2>
+    <button class="btn" data-a="recipe">レシピを見る</button>
+    <button class="btn bgm-only" data-a="bgm" hidden>BGM ON</button>
+    <button class="btn" data-a="sound">効果音 ON</button>
+    <button class="btn" data-a="pause">一時停止</button>
+    <button class="btn warn" data-a="quit">閉店する</button>
+    <button class="btn go" data-a="menu-close">とじる</button>
+  </div>
 </div>
 
 <div class="overlay" id="ov-start">
@@ -516,7 +602,9 @@ const A={
     const g=S.grill[i];if(!g||g.type!=='soba'||slotStatus(g)!=='done')return;
     if(v==='plate'){
       if(S.plate){toast('盛り付け台に焼きそばがあります。先に仕上げよう','bad');return;}
-      S.plate={log:g.log.slice(),tops:[]};S.grill[i]=null;beep(520,.08);renderGrill();renderSide();return;
+      S.plate={log:g.log.slice(),tops:[]};S.grill[i]=null;beep(520,.08);renderGrill();renderSide();
+      if(isMobile())toast('器に盛りました。「焼きそば」タブで仕上げをのせよう');
+      return;
     }
     if(g.log.includes(v))return;
     g.log.push(v);beep(600,.05);renderGrill();
@@ -616,6 +704,36 @@ function update(dt){
 
 /* ---------- render ---------- */
 function renderAll(){renderTop();renderCustomers();renderCounter();renderGrill();renderBurger();renderSide();}
+
+/* スマホ幅では調理場を1つずつ表示し、下のタブで工程を切り替える */
+const TABS=[['grill','鉄板'],['burger','バーガー'],['soba','焼きそば'],['soup','スープ']];
+const isMobile=()=>matchMedia('(max-width:760px)').matches;
+function grillIcon(){return `<svg viewBox="0 0 40 40" aria-hidden="true"><rect x="3" y="13" width="34" height="18" rx="4" fill="#3d464b" stroke="${INK}" stroke-width="1.8"/><ellipse cx="14" cy="22" rx="7" ry="4.2" fill="#efe8d4" stroke="${INK}" stroke-width="1.5"/><ellipse cx="27" cy="22" rx="6.5" ry="4.2" fill="#fff" stroke="${INK}" stroke-width="1.5"/><circle cx="27" cy="22" r="2.2" fill="#f5b324"/></svg>`;}
+function buildTabs(){
+  $('#tabbar').innerHTML=TABS.map(([k,n])=>`<button class="tab" data-a="tab" data-v="${k}">${k==='grill'?grillIcon():icon(k,k!=='burger')}<span>${n}</span><i class="badge" id="bd-${k}"></i></button>`).join('');
+  setTab(document.body.dataset.tab||'grill');
+}
+function setTab(t){
+  document.body.dataset.tab=t;
+  document.querySelectorAll('.tab').forEach(b=>b.setAttribute('aria-current',String(b.dataset.v===t)));
+  if(isMobile())$('.kitchen').scrollTop=0;
+}
+function setBadge(k,text,alert){
+  const el=document.getElementById('bd-'+k);if(!el)return;
+  if(el.textContent!==text)el.textContent=text;
+  el.classList.toggle('alert',!!alert);
+}
+function updateTabs(){
+  if(!S)return;
+  let ready=0,danger=false;
+  S.grill.forEach(g=>{if(!g)return;const st=slotStatus(g),it=GRILL[g.type];
+    if(st!=='raw')ready++;
+    if(st==='burnt'||(st==='done'&&(g.t-it.cook)/(it.burn-it.cook)>.6))danger=true;});
+  setBadge('grill',ready?String(ready):'',danger);
+  setBadge('burger',S.burger.length?String(S.burger.length):'');
+  setBadge('soba',S.plate?'!':'',!!S.plate);
+  setBadge('soup',S.soup.length?String(S.soup.length):'');
+}
 function fmt(t){t=Math.ceil(t);return `${Math.floor(t/60)}:${String(t%60).padStart(2,'0')}`;}
 function renderTime(){$('#v-time').textContent=fmt(S.time);$('#st-time').classList.toggle('low',S.time<=30);}
 function renderTop(){
@@ -661,6 +779,7 @@ function renderGrill(){
   updateGrillBars();renderGrillTray();
 }
 function updateGrillBars(){
+  updateTabs();
   S.grill.forEach((g,i)=>{
     if(!g)return;const el=document.querySelector(`[data-slot="${i}"]`);if(!el)return;
     const it=GRILL[g.type],st=slotStatus(g),bar=el.querySelector('.bar i'),food=el.querySelector('.food');
@@ -679,6 +798,7 @@ function renderGrillTray(){
   if(e){e.textContent=S.stock.egg;e.closest('button').disabled=S.stock.egg<=0;}
 }
 function renderBurger(){
+  updateTabs();
   const b=S.burger;
   $('#board').innerHTML=b.length?b.map(k=>`<div class="layer l-${k}"></div>`).join(''):'<div class="ph">まな板の上に、下から順に重ねていきます</div>';
   const ing=[['rice','ライス','#efe8d4',S.stock.patty],['lettuce','レタス','#6cbf4f'],['egg','たまご','radial-gradient(circle,#f5b324 0 4px,#fff 4.5px)',S.stock.egg],
@@ -692,12 +812,14 @@ function renderBurger(){
   else{
     const nx=BURGER_ORDER[b.length];
     const lack=(nx==='rice'&&S.stock.patty<=0)?'（鉄板でライスパテを焼こう）':(nx==='egg'&&S.stock.egg<=0)?'（鉄板で目玉焼きを焼こう）':'';
-    h.innerHTML=`<div class="nexthint">次は「${LAYER[nx]}」${lack}</div>`;
+    h.innerHTML=`<div class="nexthint">次は「${LAYER[nx]}」${lack}</div>${lack?'<button class="btn small m-only" style="width:100%;margin-top:6px" data-a="tab" data-v="grill">鉄板へ移動 →</button>':''}`;
   }
 }
 function renderSide(){
+  updateTabs();
   const p=S.plate;
-  $('#plate-area').innerHTML=`<h4>焼きそば盛り付け <small>${p?'仕上げをのせる':'鉄板の「器に盛る」でここへ'}</small></h4>
+  $('#plate-area').innerHTML=`<h2>焼きそば盛り付け <small>${p?'仕上げをのせる':'鉄板の「器に盛る」でここへ'}</small></h2>
+    ${!p?'<button class="btn small m-only" data-a="tab" data-v="grill">鉄板で焼きそばを作る →</button>':''}
     <div class="vis">${plateSVG(p)}</div>
     <div class="row">
       <button class="btn small" data-a="top" data-v="shirasu" ${!p||p.tops.includes('shirasu')?'disabled':''}><span class="chip" style="background:#f3efe4"></span>しらすをのせる</button>
@@ -706,7 +828,7 @@ function renderSide(){
     <div class="row"><button class="btn go small" style="flex:1" data-a="plate-serve" ${!p?'disabled':''}>カウンターへ</button><button class="btn small warn" data-a="plate-clear" ${!p?'disabled':''}>捨てる</button></div>
     ${mode==='easy'?'<div class="recipe-card"><b>焼きそば</b><ol><li>焼きそばを焼く</li><li>しらすと大葉を入れる</li><li>塩だれ・だし塩で味をととのえる</li><li>器に盛る</li><li>仕上げにしらすと大葉をのせる</li></ol></div>':''}`;
   const L=S.soup;
-  $('#soup-area').innerHTML=`<h4>たまごスープ <small>カップに作る</small></h4>
+  $('#soup-area').innerHTML=`<h2>たまごスープ <small>カップに作る</small></h2>
     <div class="vis">${cupSVG(L)}</div>
     <div class="row">
       <button class="btn small" data-a="soup" data-v="pour" ${L.includes('pour')?'disabled':''}><span class="chip" style="background:#f2c94c"></span>スープをそそぐ</button>
@@ -838,12 +960,16 @@ document.addEventListener('click',e=>{
   if(a==='title'){$('#ov-result').hidden=true;fillStatic();$('#ov-start').hidden=false;return;}
   if(a==='recipe'){if(S&&!S.over)S.running=false;$('#ov-recipe').hidden=false;syncBgm();return;}
   if(a==='close-recipe'){$('#ov-recipe').hidden=true;if(S&&!S.over&&$('#ov-pause').hidden)S.running=true;syncBgm();return;}
+  if(b.closest('#ov-menu')&&a!=='bgm'&&a!=='sound')$('#ov-menu').hidden=true;
+  if(a==='menu'){$('#ov-menu').hidden=false;return;}
+  if(a==='menu-close')return;
+  if(a==='tab'){setTab(v);return;}
   if(a==='rank-open'){openRanking();return;}
   if(a==='rank-close'){$('#ov-rank').hidden=true;return;}
   if(a==='rank-tab'){rankTab=v;openRanking();return;}
   if(a==='rank-send'){submitRanking();return;}
-  if(a==='sound'){muted=!muted;b.textContent=muted?'効果音 OFF':'効果音 ON';return;}
-  if(a==='bgm'){bgmOn=!bgmOn;b.textContent=bgmOn?'BGM ON':'BGM OFF';syncBgm();return;}
+  if(a==='sound'){muted=!muted;document.querySelectorAll('[data-a="sound"]').forEach(x=>x.textContent=muted?'効果音 OFF':'効果音 ON');return;}
+  if(a==='bgm'){bgmOn=!bgmOn;document.querySelectorAll('[data-a="bgm"]').forEach(x=>x.textContent=bgmOn?'BGM ON':'BGM OFF');syncBgm();return;}
   if(a==='quit'){if(!S||S.over||!$('#ov-start').hidden)return;S.running=false;$('#ov-quit').hidden=false;syncBgm();return;}
   if(a==='quit-no'){$('#ov-quit').hidden=true;if(S&&!S.over&&$('#ov-pause').hidden)S.running=true;syncBgm();return;}
   if(a==='quit-yes'){if(!S||S.over)return;$('#ov-quit').hidden=true;$('#ov-pause').hidden=true;endGame('quit');return;}
@@ -855,6 +981,7 @@ document.addEventListener('click',e=>{
 fillStatic();
 document.querySelectorAll('.rank-only').forEach(e=>e.hidden=!RANKING_URL);
 loadBgm();
+buildTabs();
 newGame('easy');S.running=false;
 S.customers.push({id:0,order:['burger','soup'],done:[false,false],p:40,max:52,age:9,mood:'happy',say:'',sayT:0,finished:false,leaveIn:0,
   look:{skin:'#f6d3b3',hair:'#5a3a22',shirt:'#f2c94c',style:1}});
